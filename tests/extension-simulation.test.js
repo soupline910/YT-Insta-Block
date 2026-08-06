@@ -162,3 +162,46 @@ test("blocked page dependencies are local and resolvable", () => {
     );
   }
 });
+
+test("blocked page renders the countdown into its DOM", async () => {
+  const originalDate = globalThis.Date;
+  const originalDocument = globalThis.document;
+  const originalSetInterval = globalThis.setInterval;
+  const fixedNow = originalDate.parse("2027-11-17T14:59:59.000Z");
+  const elements = {
+    "#countdown-label": { textContent: "" },
+    "#countdown-time": { textContent: "" },
+    "#countdown-message": { textContent: "" }
+  };
+  let intervalDelay;
+
+  class FixedDate extends originalDate {
+    static now() {
+      return fixedNow;
+    }
+  }
+
+  globalThis.Date = FixedDate;
+  globalThis.document = {
+    querySelector(selector) {
+      return elements[selector];
+    }
+  };
+  globalThis.setInterval = (_callback, delay) => {
+    intervalDelay = delay;
+    return 1;
+  };
+
+  try {
+    await import(new URL(`../blocked.js?test=${fixedNow}`, import.meta.url));
+  } finally {
+    globalThis.Date = originalDate;
+    globalThis.document = originalDocument;
+    globalThis.setInterval = originalSetInterval;
+  }
+
+  assert.equal(elements["#countdown-label"].textContent, "D-1");
+  assert.equal(elements["#countdown-time"].textContent, "0일 00시간 00분 01초");
+  assert.equal(elements["#countdown-message"].textContent, "수능까지");
+  assert.equal(intervalDelay, 1000);
+});
