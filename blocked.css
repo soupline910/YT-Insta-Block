@@ -1,0 +1,104 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+  background: #090d18;
+  color: #f7f9ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 0%, #1a2a4c 0, transparent 55%),
+    #090d18;
+}
+
+.block-card {
+  width: min(100%, 720px);
+  padding: clamp(32px, 7vw, 72px);
+  border: 1px solid #354364;
+  border-radius: 28px;
+  background: rgba(17, 25, 45, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 18px;
+  color: #7ee7c8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.06em;
+}
+
+.description {
+  margin: 24px auto 0;
+  max-width: 34rem;
+  color: #b7c1d8;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.countdown-panel {
+  margin: 42px 0 0;
+  padding: 28px 20px;
+  border-radius: 20px;
+  background: #0c1325;
+}
+
+.countdown-label,
+.countdown-message,
+.target-date {
+  margin: 0;
+}
+
+.countdown-label {
+  color: #7ee7c8;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.countdown-time {
+  margin: 12px 0;
+  color: #ffffff;
+  font-size: clamp(1.45rem, 5vw, 3rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.countdown-message {
+  color: #b7c1d8;
+  font-size: 1rem;
+}
+
+.target-date {
+  margin-top: 24px;
+  color: #8794b2;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .block-card {
+    border-radius: 20px;
+  }
+
+  .countdown-time {
+    line-height: 1.35;
+  }
+}
