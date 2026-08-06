@@ -88,3 +88,24 @@ test('uses the same KST result for a timestamp and an equivalent Date', () => {
     countdownModule.getCountdownState(new Date(timestamp))
   );
 });
+
+test('formats the visible countdown text with padded clock fields', () => {
+  assert.equal(
+    countdownModule.formatRemaining({ days: 2, hours: 3, minutes: 4, seconds: 5 }),
+    '2일 03시간 04분 05초'
+  );
+});
+
+test('keeps the KST boundary independent from the host timezone', () => {
+  const beforeKstMidnight = getState('2027-11-17T14:59:59.999Z');
+  const atKstMidnight = getState('2027-11-17T15:00:00.000Z');
+
+  assert.equal(beforeKstMidnight.status, 'before');
+  assert.equal(beforeKstMidnight.ddayLabel, 'D-1');
+  assert.equal(atKstMidnight.status, 'exam-day');
+  assert.equal(atKstMidnight.ddayLabel, 'D-Day');
+});
+
+test('rejects invalid date input', () => {
+  assert.throws(() => countdownModule.getCountdownState('not-a-date'), TypeError);
+});
