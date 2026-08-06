@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "수능 집중 차단기",
+  "version": "1.0.0",
+  "description": "YouTube와 Instagram 및 임베드 콘텐츠의 접근을 차단하고 수능 카운트다운을 표시합니다.",
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://youtube.com/*",
+    "*://*.youtube.com/*",
+    "*://youtu.be/*",
+    "*://*.youtu.be/*",
+    "*://youtube-nocookie.com/*",
+    "*://*.youtube-nocookie.com/*",
+    "*://instagram.com/*",
+    "*://*.instagram.com/*",
+    "*://ig.me/*",
+    "*://*.ig.me/*",
+    "*://instagr.am/*",
+    "*://*.instagr.am/*"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "blocking_rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "blocked.html",
+        "blocked.css",
+        "blocked.js"
+      ],
+      "matches": [
+        "*://youtube.com/*",
+        "*://*.youtube.com/*",
+        "*://youtu.be/*",
+        "*://*.youtu.be/*",
+        "*://youtube-nocookie.com/*",
+        "*://*.youtube-nocookie.com/*",
+        "*://instagram.com/*",
+        "*://*.instagram.com/*",
+        "*://ig.me/*",
+        "*://*.ig.me/*",
+        "*://instagr.am/*",
+        "*://*.instagr.am/*"
+      ]
+    }
+  ]
+}
