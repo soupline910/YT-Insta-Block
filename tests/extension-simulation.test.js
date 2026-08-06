@@ -1,0 +1,164 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+
+const extensionRoot = new URL("../", import.meta.url);
+const manifest = JSON.parse(readFileSync(new URL("manifest.json", extensionRoot), "utf8"));
+const rules = JSON.parse(readFileSync(new URL("rules.json", extensionRoot), "utf8"));
+const targetDomains = [
+  "youtube.com",
+  "youtu.be",
+  "youtube-nocookie.com",
+  "instagram.com",
+  "ig.me",
+  "instagr.am"
+];
+const targetUrls = [
+  "https://youtube.com/",
+  "https://www.youtube.com/watch?v=example",
+  "http://m.youtube.com/",
+  "https://youtu.be/example",
+  "https://youtube-nocookie.com/embed/example",
+  "https://www.youtube-nocookie.com/embed/example",
+  "https://instagram.com/",
+  "https://www.instagram.com/p/example/",
+  "https://ig.me/m/example",
+  "https://www.ig.me/m/example",
+  "http://instagr.am/p/example/",
+  "https://www.instagr.am/p/example/"
+];
+const blockedResourceTypes = [
+  "sub_frame",
+  "script",
+  "stylesheet",
+  "image",
+  "font",
+  "object",
+  "xmlhttprequest",
+  "media",
+  "websocket",
+  "ping",
+  "other"
+];
+
+function matchesDomain(hostname, domain) {
+  return hostname === domain || hostname.endsWith(`.${domain}`);
+}
+
+function evaluateRequest(url, resourceType) {
+  const request = new URL(url);
+  const matchingRules = rules
+    .filter((rule) => {
+      const domainsMatch = rule.condition.requestDomains.some((domain) =>
+        matchesDomain(request.hostname, domain)
+      );
+      const resourceTypesMatch =
+        !rule.condition.resourceTypes || rule.condition.resourceTypes.includes(resourceType);
+      return domainsMatch && resourceTypesMatch;
+    })
+    .sort((first, second) => (second.priority ?? 1) - (first.priority ?? 1));
+
+  return matchingRules[0]?.action.type ?? null;
+}
+
+function matchesHostPattern(url, pattern) {
+  const request = new URL(url);
+  const [schemePattern, hostAndPath] = pattern.split("://");
+  const pathStart = hostAndPath.indexOf("/");
+  const hostPattern = hostAndPath.slice(0, pathStart);
+  const schemeMatches = schemePattern === "*" || `${schemePattern}:` === request.protocol;
+  const hostMatches = hostPattern.startsWith("*.")
+    ? matchesDomain(request.hostname, hostPattern.slice(2))
+    : request.hostname === hostPattern;
+
+  return schemeMatches && hostMatches;
+}
+
+test("simulates target navigation and subresource blocking", () => {
+  for (const url of targetUrls) {
+    assert.equal(evaluateRequest(url, "main_frame"), "redirect", `redirect expected for ${url}`);
+
+    for (const resourceType of blockedResourceTypes) {
+      assert.equal(
+        evaluateRequest(url, resourceType),
+        "block",
+        `${resourceType} should be blocked for ${url}`
+      );
+    }
+  }
+});
+
+test("does not overblock deceptive or explicitly excluded domains", () => {
+  const nonTargetUrls = [
+    "https://example.com/",
+    "https://youtube.com.evil.example/",
+    "https://notyoutube.com/",
+    "https://threads.net/",
+    "https://facebook.com/",
+    "https://googlevideo.com/",
+    "https://fbcdn.net/"
+  ];
+
+  for (const url of nonTargetUrls) {
+    assert.equal(evaluateRequest(url, "main_frame"), null, `main frame should pass for ${url}`);
+    assert.equal(evaluateRequest(url, "script"), null, `script should pass for ${url}`);
+  }
+});
+
+test("host and web-accessible resource patterns cover every target URL", () => {
+  const resourceDeclaration = manifest.web_accessible_resources.find((resource) =>
+    resource.resources.includes("blocked.html")
+  );
+
+  assert.ok(resourceDeclaration);
+
+  for (const url of targetUrls) {
+    assert.equal(
+      manifest.host_permissions.some((pattern) => matchesHostPattern(url, pattern)),
+      true,
+      `host permission is missing for ${url}`
+    );
+    assert.equal(
+      resourceDeclaration.matches.some((pattern) => matchesHostPattern(url, pattern)),
+      true,
+      `web-accessible match is missing for ${url}`
+    );
+  }
+
+  assert.deepEqual(
+    [...new Set(rules.flatMap((rule) => rule.condition.requestDomains))].sort(),
+    [...targetDomains].sort()
+  );
+});
+
+test("blocked page dependencies are local and resolvable", () => {
+  const blockedPageUrl = new URL("blocked.html", extensionRoot);
+  const blockedPage = readFileSync(blockedPageUrl, "utf8");
+  const blockedScript = readFileSync(new URL("blocked.js", extensionRoot), "utf8");
+  const runtimeAssetNames = ["blocked.html", "blocked.css", "blocked.js", "countdown.js"];
+
+  for (const assetName of runtimeAssetNames) {
+    assert.equal(existsSync(new URL(assetName, extensionRoot)), true, `${assetName} must exist`);
+    const asset = readFileSync(new URL(assetName, extensionRoot), "utf8");
+    assert.doesNotMatch(asset, /https?:\/\//i, `${assetName} must not use remote URLs`);
+    assert.doesNotMatch(asset, /\b(fetch|XMLHttpRequest)\b/, `${assetName} must not use network APIs`);
+  }
+
+  for (const match of blockedPage.matchAll(/(?:href|src)="([^"]+)"/g)) {
+    const referencedResource = match[1];
+    assert.doesNotMatch(referencedResource, /^(?:[a-z]+:)?\/\//i);
+    assert.equal(
+      existsSync(new URL(referencedResource, blockedPageUrl)),
+      true,
+      `${referencedResource} must resolve from blocked.html`
+    );
+  }
+
+  for (const match of blockedScript.matchAll(/from\s+["'](.+?)["']/g)) {
+    assert.equal(
+      existsSync(new URL(match[1], new URL("blocked.js", extensionRoot))),
+      true,
+      `${match[1]} must resolve from blocked.js`
+    );
+  }
+});
