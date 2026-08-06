@@ -32,7 +32,7 @@ Chrome과 Microsoft Edge에서 공통으로 사용할 수 있는 Manifest V3 확
 
 ## 테스트
 
-외부 의존성 없이 Node.js 내장 테스트 러너를 사용합니다.
+외부 의존성 없이 Node.js 18.8 이상에 포함된 내장 테스트 러너를 사용합니다.
 
 ```powershell
 npm test
