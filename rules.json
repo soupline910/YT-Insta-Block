@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "priority": 100,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/blocked.html"
+      }
+    },
+    "condition": {
+      "requestDomains": [
+        "youtube.com",
+        "youtu.be",
+        "youtube-nocookie.com",
+        "instagram.com",
+        "ig.me",
+        "instagr.am"
+      ],
+      "resourceTypes": [
+        "main_frame"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 50,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "requestDomains": [
+        "youtube.com",
+        "youtu.be",
+        "youtube-nocookie.com",
+        "instagram.com",
+        "ig.me",
+        "instagr.am"
+      ]
+    }
+  }
+]
