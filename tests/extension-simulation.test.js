@@ -27,33 +27,42 @@ const targetUrls = [
   "http://instagr.am/p/example/",
   "https://www.instagr.am/p/example/"
 ];
-const blockedResourceTypes = [
+const dnrResourceTypes = [
+  "main_frame",
   "sub_frame",
-  "script",
   "stylesheet",
+  "script",
   "image",
   "font",
   "object",
   "xmlhttprequest",
+  "ping",
+  "csp_report",
   "media",
   "websocket",
-  "ping",
+  "webtransport",
+  "webbundle",
   "other"
 ];
+const defaultResourceTypes = dnrResourceTypes.filter((resourceType) => resourceType !== "main_frame");
+const blockedResourceTypes = defaultResourceTypes;
 
 function matchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
-function evaluateRequest(url, resourceType) {
+function getRuleResourceTypes(rule) {
+  return rule.condition.resourceTypes ?? defaultResourceTypes;
+}
+
+function evaluateRequest(url, resourceType, candidateRules = rules) {
   const request = new URL(url);
-  const matchingRules = rules
+  const matchingRules = candidateRules
     .filter((rule) => {
       const domainsMatch = rule.condition.requestDomains.some((domain) =>
         matchesDomain(request.hostname, domain)
       );
-      const resourceTypesMatch =
-        !rule.condition.resourceTypes || rule.condition.resourceTypes.includes(resourceType);
+      const resourceTypesMatch = getRuleResourceTypes(rule).includes(resourceType);
       return domainsMatch && resourceTypesMatch;
     })
     .sort((first, second) => (second.priority ?? 1) - (first.priority ?? 1));
@@ -73,6 +82,14 @@ function matchesHostPattern(url, pattern) {
 
   return schemeMatches && hostMatches;
 }
+
+test("does not apply omitted resourceTypes to main-frame requests", () => {
+  const blockRule = rules.find((rule) => rule.action.type === "block");
+
+  assert.ok(blockRule);
+  assert.equal(blockRule.condition.resourceTypes, undefined);
+  assert.equal(evaluateRequest(targetUrls[0], "main_frame", [blockRule]), null);
+});
 
 test("simulates target navigation and subresource blocking", () => {
   for (const url of targetUrls) {
