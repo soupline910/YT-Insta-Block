@@ -1,8 +1,9 @@
 const KST_TIME_ZONE = "Asia/Seoul";
+const KST_UTC_OFFSET = "+09:00";
 const DAY_MS = 24 * 60 * 60 * 1000;
-const EXAM_DATE_KEY = "2027-11-18";
+export const EXAM_DATE_KEY = "2027-11-18";
 
-export const EXAM_TARGET_MS = Date.parse("2027-11-17T15:00:00.000Z");
+export const EXAM_TARGET_MS = Date.parse(`${EXAM_DATE_KEY}T00:00:00${KST_UTC_OFFSET}`);
 
 function toDate(value) {
   const date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
