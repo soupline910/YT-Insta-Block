@@ -35,6 +35,13 @@ test('returns D-N and live time before the exam', () => {
   });
 });
 
+test('derives the target timestamp from the canonical KST exam date', () => {
+  assert.equal(
+    countdownModule.EXAM_TARGET_MS,
+    Date.parse(`${countdownModule.EXAM_DATE_KEY}T00:00:00+09:00`)
+  );
+});
+
 test('returns one second remaining on the day before the exam', () => {
   const state = getState('2027-11-17T14:59:59.000Z');
 
