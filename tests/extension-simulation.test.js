@@ -72,6 +72,11 @@ function evaluateRequest(url, resourceType, candidateRules = rules) {
 
 function matchesHostPattern(url, pattern) {
   const request = new URL(url);
+
+  if (pattern === "<all_urls>") {
+    return request.protocol === "http:" || request.protocol === "https:";
+  }
+
   const [schemePattern, hostAndPath] = pattern.split("://");
   const pathStart = hostAndPath.indexOf("/");
   const hostPattern = hostAndPath.slice(0, pathStart);
@@ -81,6 +86,28 @@ function matchesHostPattern(url, pattern) {
     : request.hostname === hostPattern;
 
   return schemeMatches && hostMatches;
+}
+
+// A declarativeNetRequest redirect to an extension page only completes when the
+// page is web accessible to the origin that initiated the navigation. That
+// initiator is the site holding the link, not the blocked host, so a `matches`
+// list naming only the blocked hosts fails for every inbound link.
+function canFollowRedirectFrom(initiatorUrl) {
+  const declaration = manifest.web_accessible_resources.find((resource) =>
+    resource.resources.includes("blocked.html")
+  );
+
+  if (!declaration) {
+    return false;
+  }
+
+  // Browser-initiated navigations (address bar, bookmarks) have no initiator
+  // origin to match against, so only listed-at-all matters for them.
+  if (initiatorUrl === null) {
+    return true;
+  }
+
+  return declaration.matches.some((pattern) => matchesHostPattern(initiatorUrl, pattern));
 }
 
 test("does not apply omitted resourceTypes to main-frame requests", () => {
@@ -122,23 +149,12 @@ test("does not overblock deceptive or explicitly excluded domains", () => {
   }
 });
 
-test("host and web-accessible resource patterns cover every target URL", () => {
-  const resourceDeclaration = manifest.web_accessible_resources.find((resource) =>
-    resource.resources.includes("blocked.html")
-  );
-
-  assert.ok(resourceDeclaration);
-
+test("host permissions cover the request URL of every target", () => {
   for (const url of targetUrls) {
     assert.equal(
       manifest.host_permissions.some((pattern) => matchesHostPattern(url, pattern)),
       true,
       `host permission is missing for ${url}`
-    );
-    assert.equal(
-      resourceDeclaration.matches.some((pattern) => matchesHostPattern(url, pattern)),
-      true,
-      `web-accessible match is missing for ${url}`
     );
   }
 
@@ -146,6 +162,25 @@ test("host and web-accessible resource patterns cover every target URL", () => {
     [...new Set(rules.flatMap((rule) => rule.condition.requestDomains))].sort(),
     [...targetDomains].sort()
   );
+});
+
+test("the blocked page is reachable no matter which site linked to the target", () => {
+  const inboundInitiators = [
+    null,
+    "https://www.google.com/search?q=youtube",
+    "https://search.naver.com/search.naver?query=instagram",
+    "https://discord.com/channels/@me",
+    "https://mail.google.com/",
+    "https://youtube.com/"
+  ];
+
+  for (const initiator of inboundInitiators) {
+    assert.equal(
+      canFollowRedirectFrom(initiator),
+      true,
+      `redirect to blocked.html must be followable from ${initiator ?? "the address bar"}`
+    );
+  }
 });
 
 test("blocked page dependencies are local and resolvable", () => {

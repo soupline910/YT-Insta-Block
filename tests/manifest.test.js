@@ -51,22 +51,22 @@ test('declares a Manifest V3 DNR extension with all target hosts', () => {
   }
 });
 
-test('exposes only local blocked-page resources to blocked hosts', () => {
+test('exposes the blocked page to every navigation initiator', () => {
   assert.ok(manifest, 'manifest must be loaded');
   const resourceDeclaration = manifest.web_accessible_resources.find(
     (resource) => resource.resources.includes('blocked.html')
   );
 
   assert.ok(resourceDeclaration, 'blocked.html must be web accessible');
-  assert.equal(resourceDeclaration.resources.includes('blocked.css'), true);
-  assert.equal(resourceDeclaration.resources.includes('blocked.js'), true);
-  assert.equal(
-    resourceDeclaration.matches.some((pattern) => pattern.includes('youtube.com')),
-    true
+  assert.deepEqual(
+    resourceDeclaration.resources,
+    ['blocked.html'],
+    'only the redirect target needs to be web accessible; blocked.css, blocked.js and countdown.js load same-origin from the extension page'
   );
   assert.equal(
-    resourceDeclaration.matches.some((pattern) => pattern.includes('instagram.com')),
-    true
+    resourceDeclaration.matches.includes('<all_urls>'),
+    true,
+    'matches is checked against the navigation initiator, not the blocked host, so any site that links to a blocked domain must be able to follow the redirect'
   );
 });
 
