@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "수능 집중 차단기",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "YouTube와 Instagram 및 임베드 콘텐츠의 접근을 차단하고 수능 카운트다운을 표시합니다.",
   "minimum_chrome_version": "101",
+  "incognito": "split",
   "permissions": [
     "declarativeNetRequest"
   ],
