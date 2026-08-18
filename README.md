@@ -19,14 +19,14 @@ Chrome과 Microsoft Edge에서 공통으로 사용할 수 있는 Manifest V3 확
 1. 주소창에 `chrome://extensions`를 입력합니다.
 2. 오른쪽 위 **개발자 모드**를 켭니다.
 3. **압축해제된 확장 프로그램을 로드**를 선택합니다.
-4. 이 `chrome-Egde-youtube-instr-block` 폴더를 선택합니다.
+4. 이 저장소의 루트 폴더(`manifest.json`이 있는 폴더)를 선택합니다.
 
 ### Microsoft Edge
 
 1. 주소창에 `edge://extensions`를 입력합니다.
 2. 왼쪽 또는 오른쪽의 **개발자 모드**를 켭니다.
 3. **압축 풀린 파일을 로드**를 선택합니다.
-4. 이 `chrome-Egde-youtube-instr-block` 폴더를 선택합니다.
+4. 이 저장소의 루트 폴더(`manifest.json`이 있는 폴더)를 선택합니다.
 
 파일을 수정한 뒤에는 확장 프로그램 관리 화면에서 **새로고침**을 누르고, 이미 열려 있던 탭도 다시 로드합니다.
 
