@@ -70,6 +70,21 @@ test('exposes the blocked page to every navigation initiator', () => {
   );
 });
 
+test('runs in incognito with a mode that can show the blocked page', () => {
+  assert.ok(manifest, 'manifest must be loaded');
+
+  // Blocking a navigation means redirecting it to blocked.html, which loads an
+  // extension page into the tab's main frame. Chrome's default "spanning" mode
+  // cannot do that in an incognito tab, so the redirect fails there even after
+  // the user allows the extension in incognito. Only "split" gives incognito
+  // windows their own process, which can render the page.
+  assert.equal(
+    manifest.incognito,
+    'split',
+    'spanning and not_allowed both leave incognito/InPrivate windows unblocked'
+  );
+});
+
 test('redirects main frames and blocks every other target request', () => {
   assert.ok(Array.isArray(rules), 'rules must be loaded');
   const ruleIds = rules.map((rule) => rule.id);

@@ -30,6 +30,26 @@ Chrome과 Microsoft Edge에서 공통으로 사용할 수 있는 Manifest V3 확
 
 파일을 수정한 뒤에는 확장 프로그램 관리 화면에서 **새로고침**을 누르고, 이미 열려 있던 탭도 다시 로드합니다.
 
+## 시크릿 모드 · InPrivate
+
+시크릿 창과 InPrivate 창에서는 확장 프로그램이 **기본적으로 꺼져 있습니다.** 브라우저가 사용자 동의 없이 켜지 못하도록 막아 두었기 때문에 manifest만으로는 자동으로 켤 수 없고, 아래 토글을 직접 켜야 합니다.
+
+### Chrome
+
+1. `chrome://extensions`로 이동합니다.
+2. **수능 집중 차단기** 카드의 **세부정보**를 누릅니다.
+3. **시크릿 모드에서 허용**을 켭니다.
+
+### Microsoft Edge
+
+1. `edge://extensions`로 이동합니다.
+2. **수능 집중 차단기**의 **세부 정보**를 누릅니다.
+3. **InPrivate에서 허용**을 켭니다.
+
+토글을 켠 뒤에는 열려 있던 시크릿/InPrivate 창을 모두 닫았다가 다시 엽니다.
+
+이 확장은 `manifest.json`에서 `"incognito": "split"`을 선언합니다. 기본값인 `"spanning"` 모드에서는 시크릿 탭의 메인 프레임에 확장 페이지를 불러올 수 없어, 위 토글을 켜더라도 차단 페이지로의 리다이렉트가 조용히 실패합니다. `"split"`은 시크릿 창에 별도 프로세스를 주기 때문에 차단 페이지가 정상적으로 표시됩니다.
+
 ## 테스트
 
 외부 의존성 없이 Node.js 18.8 이상에 포함된 내장 테스트 러너를 사용합니다.
@@ -40,10 +60,13 @@ npm test
 
 ## 제한 사항
 
+시크릿 모드 허용은 사용자가 언제든 다시 끌 수 있고, 꺼진 시크릿 창에서는 차단이 적용되지 않습니다.
+
 일반 확장 프로그램 권한만으로는 사용자가 브라우저 설정에서 확장 프로그램을 비활성화하거나 삭제하는 것을 막을 수 없습니다. 사용자가 임의로 해제할 수 없는 차단이 필요하면 Chrome/Edge 관리 정책, 운영체제 계정 정책 또는 네트워크/DNS 수준의 별도 관리가 필요합니다.
 
 ## 참고
 
 - [Chrome `declarativeNetRequest` API](https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest)
 - [Microsoft Edge Manifest V3](https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/manifest-v3)
+- [Chrome `incognito` 매니페스트 키](https://developer.chrome.com/docs/extensions/reference/manifest/incognito)
 - [교육부 2028학년도 대학수학능력시험 일정 발표](https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=103512&lev=0&m=020402&opType=N&s=moe&statusYN=W)
